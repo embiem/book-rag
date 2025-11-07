@@ -1,0 +1,13 @@
+- add sqlc (with pgx)
+- add docker compose setup for postgres using pgvector & ollama
+- setup embedding model via ollama
+- implement flow:
+  - user uploads a .txt file of a book
+  - simple chunking & vector embedding creation
+  - insert into pgvector
+
+- implement querying:
+  - user sends a query & bookID
+  - create vector embedding of query
+  - perform similarity search on pgvector for that bookID
+  - return 20 most similar snippets, sorted
