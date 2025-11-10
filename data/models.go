@@ -9,14 +9,14 @@ import (
 )
 
 type RagBook struct {
-	ID   int64
-	Name string
-	Text string
+	ID       int64
+	BookName string
+	BookText string
 }
 
 type RagBookPassage struct {
-	ID        int64
-	BookID    int64
-	Text      string
-	Embedding pgvector.Vector
+	ID          int64
+	BookID      int64
+	PassageText string
+	Embedding   pgvector.Vector
 }

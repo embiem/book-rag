@@ -18,7 +18,7 @@ var (
 )
 
 const createBookPassages = `-- name: CreateBookPassages :batchexec
-INSERT INTO rag.book_passage (book_id, text, embedding)
+INSERT INTO rag.book_passage (book_id, passage_text, embedding)
 VALUES (
     $1, $2, $3
 )
@@ -31,9 +31,9 @@ type CreateBookPassagesBatchResults struct {
 }
 
 type CreateBookPassagesParams struct {
-	BookID    int64
-	Text      string
-	Embedding pgvector.Vector
+	BookID      int64
+	PassageText string
+	Embedding   pgvector.Vector
 }
 
 func (q *Queries) CreateBookPassages(ctx context.Context, arg []CreateBookPassagesParams) *CreateBookPassagesBatchResults {
@@ -41,7 +41,7 @@ func (q *Queries) CreateBookPassages(ctx context.Context, arg []CreateBookPassag
 	for _, a := range arg {
 		vals := []interface{}{
 			a.BookID,
-			a.Text,
+			a.PassageText,
 			a.Embedding,
 		}
 		batch.Queue(createBookPassages, vals...)

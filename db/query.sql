@@ -1,10 +1,11 @@
--- name: CreateBook
+-- name: CreateBook :one
 INSERT INTO rag.book (book_name, book_text)
 VALUES (
     $1, $2
-);
+)
+RETURNING *;
 
--- name: ListBooks
+-- name: ListBooks :many
 SELECT
     id,
     book_name

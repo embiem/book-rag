@@ -29,7 +29,7 @@ func Init() error {
 
 	// Run any outstanding migrations
 	m, err := migrate.New(
-		"file://internal/db/migrations",
+		"file://db/migrations",
 		os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return fmt.Errorf("failed opening connection to postgres for migration: %v", err)

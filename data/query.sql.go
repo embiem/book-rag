@@ -11,10 +11,62 @@ import (
 	"github.com/pgvector/pgvector-go"
 )
 
-const similaritySearch = `-- name: SimilaritySearch :many
+const createBook = `-- name: CreateBook :one
+INSERT INTO rag.book (book_name, book_text)
+VALUES (
+    $1, $2
+)
+RETURNING id, book_name, book_text
+`
+
+type CreateBookParams struct {
+	BookName string
+	BookText string
+}
+
+func (q *Queries) CreateBook(ctx context.Context, arg CreateBookParams) (RagBook, error) {
+	row := q.db.QueryRow(ctx, createBook, arg.BookName, arg.BookText)
+	var i RagBook
+	err := row.Scan(&i.ID, &i.BookName, &i.BookText)
+	return i, err
+}
+
+const listBooks = `-- name: ListBooks :many
 SELECT
     id,
-    text,
+    book_name
+FROM rag.book
+`
+
+type ListBooksRow struct {
+	ID       int64
+	BookName string
+}
+
+func (q *Queries) ListBooks(ctx context.Context) ([]ListBooksRow, error) {
+	rows, err := q.db.Query(ctx, listBooks)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListBooksRow
+	for rows.Next() {
+		var i ListBooksRow
+		if err := rows.Scan(&i.ID, &i.BookName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const queryBook = `-- name: QueryBook :many
+SELECT
+    id,
+    passage_text,
     CAST(1 - (embedding <=> $1) AS REAL) AS similarity
 FROM rag.book_passage
 WHERE book_id = $1
@@ -22,28 +74,28 @@ ORDER BY embedding <=> $2
 LIMIT $3
 `
 
-type SimilaritySearchParams struct {
+type QueryBookParams struct {
 	Embedding   pgvector.Vector
 	Embedding_2 pgvector.Vector
 	Limit       int32
 }
 
-type SimilaritySearchRow struct {
-	ID         int64
-	Text       string
-	Similarity float32
+type QueryBookRow struct {
+	ID          int64
+	PassageText string
+	Similarity  float32
 }
 
-func (q *Queries) SimilaritySearch(ctx context.Context, arg SimilaritySearchParams) ([]SimilaritySearchRow, error) {
-	rows, err := q.db.Query(ctx, similaritySearch, arg.Embedding, arg.Embedding_2, arg.Limit)
+func (q *Queries) QueryBook(ctx context.Context, arg QueryBookParams) ([]QueryBookRow, error) {
+	rows, err := q.db.Query(ctx, queryBook, arg.Embedding, arg.Embedding_2, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []SimilaritySearchRow
+	var items []QueryBookRow
 	for rows.Next() {
-		var i SimilaritySearchRow
-		if err := rows.Scan(&i.ID, &i.Text, &i.Similarity); err != nil {
+		var i QueryBookRow
+		if err := rows.Scan(&i.ID, &i.PassageText, &i.Similarity); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
