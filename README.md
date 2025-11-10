@@ -20,7 +20,11 @@ You can use test books from /books, or download more from [https://www.gutenberg
 - `GET /` - API Info
 - `GET /books` - List available books for querying
 - `POST /books` - Ingest a new book into the vector database (upload .txt file)
-- `GET /books/{bookID}` - Query for snippets from a specific book
+- `POST /books/{bookID}/query` - Query for snippets from a specific book
+  - Request body: `{"query": "search text", "limit": 20}`
+  - `query` (required): Search query text
+  - `limit` (optional): Number of results to return (default: 20, max: 100)
+  - Returns passages ranked by similarity with scores
 - `POST /books/{bookID}/rag` - Provide a prompt and receive a LLM generated
   answer enriched with relevant passages from the book
 
@@ -57,16 +61,13 @@ The current setup will run outstanding migrations at runtime on startup via `db/
 
 ## TODO
 
-- implement querying:
-  - user sends a query & bookID
-  - create vector embedding of query
-  - perform similarity search on pgvector for that bookID
-  - return 20 most similar snippets, sorted
-
-- call LLM with a user's query + related snippets from the book
+- call LLM with a user's query + related snippets from the book (implement RAG endpoint)
 
 ## Further Improvements
 
 - ollama as a component in docker-compose with necessary embedding model
   pre-installed. So we don't have to require manually installing it.
 - generate embeddings in batches & in parallel in rag/embedding.go
+- insert embeddings into DB as they are created to prevent large memory spikes
+  for larger books
+- improve the chunking mechanism

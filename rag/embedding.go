@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
+	"math"
 	"net/http"
 	"os"
 	"time"
@@ -26,12 +28,9 @@ const (
 
 var OllamaBaseURL string = os.Getenv("OLLAMA_BASE_URL")
 
-func GenerateEmbeddings(input []string) ([][]float32, error) {
-	payload := OllamaPayload{
-		Model: EmbeddingModel,
-		Input: input,
-	}
+const BatchSize = 20
 
+func callOllama(payload OllamaPayload) (*OllamaResponseEmbeddings, error) {
 	reqData, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -65,9 +64,35 @@ func GenerateEmbeddings(input []string) ([][]float32, error) {
 		return nil, err
 	}
 
-	if len(data.Embeddings) == 0 {
+	return &data, nil
+}
+
+func GenerateEmbeddings(input []string) ([][]float32, error) {
+	// Create embeddings in batches, one at a time to prevent overwhelming
+	allEmbeddings := make([][]float32, 0, len(input))
+
+	batchCount := math.Ceil(float64(len(input)) / float64(BatchSize))
+	for i := 0; i < int(batchCount); i++ {
+		slog.Info("Generating Embeddings...", "batch", i+1, "of", batchCount)
+		startIdx := i * BatchSize
+		batch := input[startIdx:min(startIdx+BatchSize, len(input))]
+
+		payload := OllamaPayload{
+			Model: EmbeddingModel,
+			Input: batch,
+		}
+
+		res, err := callOllama(payload)
+		if err != nil {
+			return nil, err
+		}
+
+		allEmbeddings = append(allEmbeddings, res.Embeddings...)
+	}
+
+	if len(allEmbeddings) == 0 {
 		return nil, fmt.Errorf("ollama API returned empty embeddings array")
 	}
 
-	return data.Embeddings, nil
+	return allEmbeddings, nil
 }

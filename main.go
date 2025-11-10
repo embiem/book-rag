@@ -27,7 +27,9 @@ func main() {
 Available endpoints:
 - GET /books - List available books for querying
 - POST /books - Ingest a new book into the vector database (upload .txt file)
-- GET /books/{bookID} - Query for snippets from a specific book
+- POST /books/{bookID}/query - Query for snippets from a specific book
+  Body: {"query": "search text", "limit": 20}
+  query (required), limit (optional, default: 20, max: 100)
 `))
 	})
 
@@ -35,9 +37,7 @@ Available endpoints:
 
 	r.Post("/books", handler.HandleIngestBook)
 
-	r.Get("/books/{bookID}", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("GET book with ID to query for snippets from the given book"))
-	})
+	r.Post("/books/{bookID}/query", handler.HandleQueryBook)
 
 	r.Post("/books/{bookID}/rag", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("POST a prompt for a book with ID to generate a LLM response with relevant context from the book"))

@@ -84,6 +84,9 @@ func HandleIngestBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Normalize line endings (convert CRLF to LF) to ensure consistent chunking
+	text = strings.ReplaceAll(text, "\r\n", "\n")
+
 	tx, err := db.Conn.Begin(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

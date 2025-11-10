@@ -21,8 +21,11 @@ VALUES (
 SELECT
     id,
     passage_text,
-    CAST(1 - (embedding <=> $1) AS REAL) AS similarity
+    CAST(1 - (embedding <=> $2) AS REAL) AS similarity
 FROM rag.book_passage
 WHERE book_id = $1
 ORDER BY embedding <=> $2
 LIMIT $3;
+
+-- name: BookExists :one
+SELECT EXISTS(SELECT 1 FROM rag.book WHERE id = $1);

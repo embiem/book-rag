@@ -11,6 +11,17 @@ import (
 	"github.com/pgvector/pgvector-go"
 )
 
+const bookExists = `-- name: BookExists :one
+SELECT EXISTS(SELECT 1 FROM rag.book WHERE id = $1)
+`
+
+func (q *Queries) BookExists(ctx context.Context, id int64) (bool, error) {
+	row := q.db.QueryRow(ctx, bookExists, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createBook = `-- name: CreateBook :one
 INSERT INTO rag.book (book_name, book_text)
 VALUES (
@@ -67,7 +78,7 @@ const queryBook = `-- name: QueryBook :many
 SELECT
     id,
     passage_text,
-    CAST(1 - (embedding <=> $1) AS REAL) AS similarity
+    CAST(1 - (embedding <=> $2) AS REAL) AS similarity
 FROM rag.book_passage
 WHERE book_id = $1
 ORDER BY embedding <=> $2
@@ -75,9 +86,9 @@ LIMIT $3
 `
 
 type QueryBookParams struct {
-	Embedding   pgvector.Vector
-	Embedding_2 pgvector.Vector
-	Limit       int32
+	BookID    int64
+	Embedding pgvector.Vector
+	Limit     int32
 }
 
 type QueryBookRow struct {
@@ -87,7 +98,7 @@ type QueryBookRow struct {
 }
 
 func (q *Queries) QueryBook(ctx context.Context, arg QueryBookParams) ([]QueryBookRow, error) {
-	rows, err := q.db.Query(ctx, queryBook, arg.Embedding, arg.Embedding_2, arg.Limit)
+	rows, err := q.db.Query(ctx, queryBook, arg.BookID, arg.Embedding, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
