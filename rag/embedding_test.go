@@ -23,8 +23,8 @@ func TestGenerateEmbeddings(t *testing.T) {
 		}
 
 		// Verify the request path
-		if r.URL.Path != "/api/embeddings" {
-			t.Errorf("Expected path /api/embeddings, got %s", r.URL.Path)
+		if r.URL.Path != "/api/embed" {
+			t.Errorf("Expected path /api/embed, got %s", r.URL.Path)
 		}
 
 		// Verify Content-Type header
