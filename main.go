@@ -21,9 +21,6 @@ func main() {
 	r.Use(middleware.Heartbeat("/ping"))
 	r.Use(middleware.Logger)
 
-	// GET books to see available books for querying
-	// POST books to ingest a new book into the vector db
-	// GET books/{id} to query a specific book
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`Book RAG API
 
@@ -34,14 +31,16 @@ Available endpoints:
 `))
 	})
 
-	r.Get("/books", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("GET books, to see available books for querying"))
-	})
+	r.Get("/books", handler.HandleListBooks)
 
 	r.Post("/books", handler.HandleIngestBook)
 
 	r.Get("/books/{bookID}", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("GET book with ID to query for snippets from the given book"))
+	})
+
+	r.Post("/books/{bookID}/rag", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("POST a prompt for a book with ID to generate a LLM response with relevant context from the book"))
 	})
 
 	slog.Info("Listening on :3000")

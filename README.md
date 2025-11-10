@@ -1,10 +1,16 @@
 # Book RAG
 
+## Prerequisites
+
+- mise-en-place: <https://mise.jdx.dev/>
+- docker
+
 ## Get started
 
-3. activate mise in the project (pins a go version & loads env vars)
-4. `docker compose up -d` to run the db. Only for local development.
-5. install ollama & `ollama pull embeddinggemma` for generating vector embeddings
+1. activate mise in the project (pins a go version & loads env vars)
+2. `docker compose up -d` to run the db. Only for local development.
+3. install [ollama](https://ollama.com/download) & run `ollama pull embeddinggemma`
+   to download the vector embeddings model used for generating vector embeddings
 
 Finally, use the following REST API endpoints to interact with the server.
 You can use test books from /books, or download more from [https://www.gutenberg.org/](https://www.gutenberg.org/).
@@ -15,10 +21,13 @@ You can use test books from /books, or download more from [https://www.gutenberg
 - `GET /books` - List available books for querying
 - `POST /books` - Ingest a new book into the vector database (upload .txt file)
 - `GET /books/{bookID}` - Query for snippets from a specific book
+- `POST /books/{bookID}/rag` - Provide a prompt and receive a LLM generated
+  answer enriched with relevant passages from the book
 
 ## DB
 
-Using golang-migrate for migrations ([Tutorial](https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md)) and sqlc for queries, mutations & codegen ([Tutorial](https://docs.sqlc.dev/en/stable/tutorials/getting-started-postgresql.html)).
+Using golang-migrate for migrations ([Tutorial](https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md))
+and sqlc for queries, mutations & codegen ([Tutorial](https://docs.sqlc.dev/en/stable/tutorials/getting-started-postgresql.html)).
 
 A PostgreSQL instance with pgvector installed is set-up using docker-compose.
 
@@ -47,11 +56,6 @@ When db is dirty, force db to a version reflecting it's real state: `migrate -da
 The current setup will run outstanding migrations at runtime on startup via `db/init.go`.
 
 ## TODO
-
-- implement flow:
-  - user uploads a .txt file of a book
-  - simple chunking & vector embedding creation
-  - insert into pgvector
 
 - implement querying:
   - user sends a query & bookID
