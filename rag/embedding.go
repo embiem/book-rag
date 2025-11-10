@@ -12,12 +12,12 @@ import (
 )
 
 type OllamaPayload struct {
-	Model string `json:"model"`
-	Input string `json:"input"`
+	Model string   `json:"model"`
+	Input []string `json:"input"`
 }
 
 type OllamaResponseEmbeddings struct {
-	Embedding []float32 `json:"embedding"`
+	Embeddings [][]float32 `json:"embeddings"`
 }
 
 const (
@@ -26,10 +26,10 @@ const (
 
 var OllamaBaseURL string = os.Getenv("OLLAMA_BASE_URL")
 
-func GenerateEmbedding(text string) ([]float32, error) {
+func GenerateEmbeddings(input []string) ([][]float32, error) {
 	payload := OllamaPayload{
 		Model: EmbeddingModel,
-		Input: text,
+		Input: input,
 	}
 
 	reqData, err := json.Marshal(payload)
@@ -37,7 +37,7 @@ func GenerateEmbedding(text string) ([]float32, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/embeddings", OllamaBaseURL), bytes.NewReader(reqData))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/embed", OllamaBaseURL), bytes.NewReader(reqData))
 	if err != nil {
 		return nil, err
 	}
@@ -55,33 +55,19 @@ func GenerateEmbedding(text string) ([]float32, error) {
 		return nil, err
 	}
 
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("ollama API returned status %d: %s", res.StatusCode, string(resData))
+	}
+
 	var data OllamaResponseEmbeddings
 	err = json.Unmarshal(resData, &data)
 	if err != nil {
 		return nil, err
 	}
 
-	return data.Embedding, nil
-}
-
-func GenerateEmbeddings(texts []string) ([][]float32, error) {
-	// TODO: run multiple in batch. docs: https://docs.ollama.com/capabilities/embeddings#generate-a-batch-of-embeddings
-	embeddings := make([][]float32, len(texts))
-	for i := range len(texts) {
-		embed, err := GenerateEmbedding(texts[i])
-		if err != nil {
-			return nil, err
-		}
-		embeddings[i] = embed
-	}
-	return embeddings, nil
-}
-
-func GenerateSingleEmbedding(text string) ([]float32, error) {
-	embeddings, err := GenerateEmbeddings([]string{text})
-	if err != nil {
-		return nil, err
+	if len(data.Embeddings) == 0 {
+		return nil, fmt.Errorf("ollama API returned empty embeddings array")
 	}
 
-	return embeddings[0], nil
+	return data.Embeddings, nil
 }

@@ -7,10 +7,10 @@ import (
 	"testing"
 )
 
-func TestGenerateEmbedding(t *testing.T) {
-	mockEmbedding := []float32{0.1, 0.2, 0.3, 0.4, 0.5}
+func TestGenerateEmbeddings(t *testing.T) {
+	mockEmbedding := [][]float32{{0.1, 0.2, 0.3, 0.4, 0.5}}
 	mockResponse := OllamaResponseEmbeddings{
-		Embedding: mockEmbedding,
+		Embeddings: mockEmbedding,
 	}
 
 	testInputText := "test input text"
@@ -37,8 +37,8 @@ func TestGenerateEmbedding(t *testing.T) {
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			t.Errorf("Failed to decode request body: %v", err)
 		}
-		if payload.Input != testInputText {
-			t.Errorf("Expected input %s, got %s", testInputText, payload.Input)
+		if payload.Input[0] != testInputText {
+			t.Errorf("Expected input %s, got %s", testInputText, payload.Input[0])
 		}
 
 		// Write the mock response
@@ -52,17 +52,17 @@ func TestGenerateEmbedding(t *testing.T) {
 	OllamaBaseURL = server.URL
 	defer func() { OllamaBaseURL = originalURL }()
 
-	embedding, err := GenerateEmbedding(testInputText)
+	embedding, err := GenerateEmbeddings([]string{testInputText})
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if len(embedding) != len(mockEmbedding) {
+	if len(embedding[0]) != len(mockEmbedding[0]) {
 		t.Fatalf("Expected embedding length %d, got %d", len(mockEmbedding), len(embedding))
 	}
 
-	for i, val := range embedding {
-		if val != mockEmbedding[i] {
+	for i, val := range embedding[0] {
+		if val != mockEmbedding[0][i] {
 			t.Errorf("Expected embedding[%d] = %f, got %f", i, mockEmbedding[i], val)
 		}
 	}
@@ -80,7 +80,7 @@ func TestGenerateEmbedding_ServerError(t *testing.T) {
 	OllamaBaseURL = server.URL
 	defer func() { OllamaBaseURL = originalURL }()
 
-	_, err := GenerateEmbedding("test input text")
+	_, err := GenerateEmbeddings([]string{"test input text"})
 
 	if err == nil {
 		t.Fatal("Expected an error, got nil")
@@ -100,7 +100,7 @@ func TestGenerateEmbedding_InvalidJSON(t *testing.T) {
 	OllamaBaseURL = server.URL
 	defer func() { OllamaBaseURL = originalURL }()
 
-	_, err := GenerateEmbedding("test input text")
+	_, err := GenerateEmbeddings([]string{"test input text"})
 
 	if err == nil {
 		t.Fatal("Expected an error, got nil")
