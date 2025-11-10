@@ -25,7 +25,13 @@ func main() {
 	// POST books to ingest a new book into the vector db
 	// GET books/{id} to query a specific book
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome!"))
+		w.Write([]byte(`Book RAG API
+
+Available endpoints:
+- GET /books - List available books for querying
+- POST /books - Ingest a new book into the vector database (upload .txt file)
+- GET /books/{bookID} - Query for snippets from a specific book
+`))
 	})
 
 	r.Get("/books", func(w http.ResponseWriter, r *http.Request) {

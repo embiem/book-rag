@@ -6,9 +6,21 @@
 4. `docker compose up -d` to run the db. Only for local development.
 5. install ollama & `ollama pull embeddinggemma` for generating vector embeddings
 
+Finally, use the following REST API endpoints to interact with the server.
+You can use test books from /books, or download more from [https://www.gutenberg.org/](https://www.gutenberg.org/).
+
+### REST API
+
+- `GET /` - API Info
+- `GET /books` - List available books for querying
+- `POST /books` - Ingest a new book into the vector database (upload .txt file)
+- `GET /books/{bookID}` - Query for snippets from a specific book
+
 ## DB
 
 Using golang-migrate for migrations ([Tutorial](https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md)) and sqlc for queries, mutations & codegen ([Tutorial](https://docs.sqlc.dev/en/stable/tutorials/getting-started-postgresql.html)).
+
+A PostgreSQL instance with pgvector installed is set-up using docker-compose.
 
 [sqlc doc](https://docs.sqlc.dev/en/stable/howto/ddl.html) about handling SQL migrations.
 
@@ -31,6 +43,8 @@ Alternatively, run the command manually:
 Optionally, test migrations up & down on a separate local db instance e.g. by spinning up a stack with different name: `docker compose -p dbmigrations-testing up -d`.
 
 When db is dirty, force db to a version reflecting it's real state: `migrate -database ${POSTGRESQL_URL} -path internal/db/migrations force VERSION`. Only for local development.
+
+The current setup will run outstanding migrations at runtime on startup via `db/init.go`.
 
 ## TODO
 
