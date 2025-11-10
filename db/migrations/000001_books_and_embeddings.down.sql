@@ -1,0 +1,8 @@
+BEGIN;
+
+DROP TABLE IF EXISTS rag.book_passage;
+DROP TABLE IF EXISTS rag.book;
+
+DROP SCHEMA IF EXISTS rag;
+
+COMMIT;

@@ -1,0 +1,19 @@
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    restart: on-failure
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: ghcr.io/shyim/adminerevo:latest
+    restart: on-failure
+    ports:
+      - 8080:8080
+volumes:
+  db_data:
