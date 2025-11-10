@@ -19,7 +19,11 @@ You can use test books from /books, or download more from [https://www.gutenberg
 
 - `GET /` - API Info
 - `GET /books` - List available books for querying
-- `POST /books` - Ingest a new book into the vector database (upload .txt file)
+- `POST /books` - Ingest a new book into the vector database
+  - Content-Type: `multipart/form-data`
+  - Form field: `file`. Plain text file (.txt) containing the book content
+  - Alternatively a `text` field with the book's text
+  - Returns the newly created book ID
 - `POST /books/{bookID}/query` - Query for snippets from a specific book
   - Request body: `{"query": "search text", "limit": 20}`
   - `query` (required): Search query text
@@ -27,6 +31,22 @@ You can use test books from /books, or download more from [https://www.gutenberg
   - Returns passages ranked by similarity with scores
 - `POST /books/{bookID}/rag` - Provide a prompt and receive a LLM generated
   answer enriched with relevant passages from the book
+
+#### Example curl commands
+
+```bash
+# Ingest a new book
+curl -X POST http://localhost:3000/books \
+  -F "file=@books/romeo_and_juliet.txt"
+
+# List all books
+curl http://localhost:8080/books
+
+# Query a book (replace {bookID} with actual ID from previous commands)
+curl -X POST http://localhost:8080/books/{bookID}/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What happens in the balcony scene?"}'
+```
 
 ## DB
 
