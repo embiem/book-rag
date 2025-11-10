@@ -87,7 +87,8 @@ The current setup will run outstanding migrations at runtime on startup via `db/
 
 - ollama as a component in docker-compose with necessary embedding model
   pre-installed. So we don't have to require manually installing it.
-- generate embeddings in batches & in parallel in rag/embedding.go
 - insert embeddings into DB as they are created to prevent large memory spikes
   for larger books
 - improve the chunking mechanism
+- include mechanism to "expand" a passage to read e.g. what comes before/after
+  it
