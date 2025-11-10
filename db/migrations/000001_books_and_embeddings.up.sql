@@ -14,7 +14,7 @@ CREATE TABLE rag.book_passage (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     book_id BIGINT NOT NULL REFERENCES rag.book (id) ON DELETE CASCADE,
     passage_text TEXT NOT NULL,
-    embedding VECTOR(1024)
+    embedding VECTOR
 );
 
 COMMIT;
