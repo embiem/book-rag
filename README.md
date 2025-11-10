@@ -2,19 +2,19 @@
 
 ## Get started
 
-3. `cp cmd/server/.env.example cmd/server/.env` & fill in env vars
+3. activate mise in the project (pins a go version & loads env vars)
 4. `docker compose up -d` to run the db. Only for local development.
-5. install ollama & `ollama pull mxbai-embed-large` for generating vector embeddings
+5. install ollama & `ollama pull embeddinggemma` for generating vector embeddings
 
-## db
+## DB
 
 Using golang-migrate for migrations ([Tutorial](https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md)) and sqlc for queries, mutations & codegen ([Tutorial](https://docs.sqlc.dev/en/stable/tutorials/getting-started-postgresql.html)).
 
 [sqlc doc](https://docs.sqlc.dev/en/stable/howto/ddl.html) about handling SQL migrations.
 
-### Generate client code
+### Generate client db code
 
-Use the Makefile: `make generate`
+Use the Makefile: `make generate`. Only necessary after changing `db/query.sql`.
 
 Alternatively, run the command manually:
 
@@ -22,23 +22,18 @@ Alternatively, run the command manually:
 
 ### Migrations
 
-For local dev, setup env var like so: `export POSTGRESQL_URL='postgres://postgres:password@localhost:5432/postgres?sslmode=disable'`.
-
-Optionally, test migrations up & down on a separate local db instance e.g. by spinning up a stack with different name: `docker compose -p dbmigrations-testing up -d`.
-
 1. Create Migration files: `migrate create -ext sql -dir db/migrations -seq your_migration_description`
 2. Write the migrations in the created up & down files using SQL
 3. Run up migrations: `migrate -database ${POSTGRESQL_URL} -path db/migrations up`
 4. Check db & run down migrations to test they work as well: `migrate -database ${POSTGRESQL_URL} -path internal/db/migrations down` & check db as well
 5. run up migrations again
 
-When dirty, force db to a version reflecting it's real state: `migrate -database ${POSTGRESQL_URL} -path internal/db/migrations force VERSION`
+Optionally, test migrations up & down on a separate local db instance e.g. by spinning up a stack with different name: `docker compose -p dbmigrations-testing up -d`.
+
+When db is dirty, force db to a version reflecting it's real state: `migrate -database ${POSTGRESQL_URL} -path internal/db/migrations force VERSION`. Only for local development.
 
 ## TODO
 
-- add sqlc (with pgx)
-- add docker compose setup for postgres using pgvector & ollama
-- setup embedding model via ollama
 - implement flow:
   - user uploads a .txt file of a book
   - simple chunking & vector embedding creation
@@ -49,3 +44,11 @@ When dirty, force db to a version reflecting it's real state: `migrate -database
   - create vector embedding of query
   - perform similarity search on pgvector for that bookID
   - return 20 most similar snippets, sorted
+
+- call LLM with a user's query + related snippets from the book
+
+## Further Improvements
+
+- ollama as a component in docker-compose with necessary embedding model
+  pre-installed. So we don't have to require manually installing it.
+- generate embeddings in batches & in parallel in rag/embedding.go
