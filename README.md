@@ -1,5 +1,8 @@
 # Book RAG
 
+This is a HTTP server in Golang that offers REST endpoints for ingesting a book
+into a vector database and then querying it and doing RAG using a LLM on it.
+
 ## Prerequisites
 
 - mise-en-place: <https://mise.jdx.dev/>
@@ -8,9 +11,11 @@
 ## Get started
 
 1. activate mise in the project (pins a go version & loads env vars)
-2. `docker compose up -d` to run the db. Only for local development.
+2. `docker compose up -d` to run the necessary architecture (like db)
 3. install [ollama](https://ollama.com/download) & run `ollama pull embeddinggemma`
    to download the vector embeddings model used for generating vector embeddings
+4. ensure the `OPENAI_API_KEY` env var exists and has a valid OpenAI API Key for
+   the LLM generation, for example using mise.local.toml
 
 Finally, use the following REST API endpoints to interact with the server.
 You can use test books from /books, or download more from [https://www.gutenberg.org/](https://www.gutenberg.org/).
