@@ -47,6 +47,12 @@ curl -X POST http://localhost:3000/books \
 # List all books
 curl http://localhost:8080/books
 
+# Perform RAG a book (replace {bookID} with actual ID from previous commands)
+# Requires OPENAI_API_KEY env variable to be set
+curl -X POST http://localhost:8080/books/{bookID}/rag \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What happens in the balcony scene?"}'
+
 # Query a book (replace {bookID} with actual ID from previous commands)
 curl -X POST http://localhost:8080/books/{bookID}/query \
   -H "Content-Type: application/json" \
@@ -84,16 +90,26 @@ When db is dirty, force db to a version reflecting it's real state: `migrate -da
 
 The current setup will run outstanding migrations at runtime on startup via `db/init.go`.
 
-## TODO
-
-- call LLM with a user's query + related snippets from the book (implement RAG endpoint)
-
 ## Further Improvements
+
+**Architectural**:
 
 - ollama as a component in docker-compose with necessary embedding model
   pre-installed. So we don't have to require manually installing it.
 - insert embeddings into DB as they are created to prevent large memory spikes
   for larger books
-- improve the chunking mechanism
+
+**RAG specific**:
+
+- setup evaluation pipeline & metrics before improving the RAG pipeline, e.g.
+  using a LLM as a judge approach and a
+- improve the chunking mechanism to better fit the domain space of books
+  (chapters, prologue, table of contents etc)
+- extract entities from book and add as metadata on passages, allowing hybrid
+  search to increase precision of query results
 - include mechanism to "expand" a passage to read e.g. what comes before/after
-  it
+  it, by including references to previous/next passages
+- let LLM generate an optimized query based on the user's input (HyDE)
+- during generation, use LLM function calling to allow the model to query for
+  more context if necessary, with an additional similarity search or retrieving
+  the previous/next passage of a passage that is of interest

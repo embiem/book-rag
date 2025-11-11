@@ -4,6 +4,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/embiem/book-rag/db"
 	"github.com/embiem/book-rag/handler"
@@ -39,16 +40,17 @@ Available endpoints:
 
 	r.Post("/books/{bookID}/query", handler.HandleQueryBook)
 
-	r.Post("/books/{bookID}/rag", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("POST a prompt for a book with ID to generate a LLM response with relevant context from the book"))
-	})
+	r.Post("/books/{bookID}/rag", handler.HandleGenerate)
 
 	slog.Info("Listening on :3000")
 	http.ListenAndServe(":3000", r)
 }
 
 func initialize() {
-	// TODO: ensure env vars are available
+	openaiApiKey := os.Getenv("OPENAI_API_KEY")
+	if openaiApiKey == "" {
+		slog.Warn("Missing OPENAI_API_KEY env var. /rag endpoint won't work.")
+	}
 
 	// Setup DB
 	if err := db.Init(); err != nil {
