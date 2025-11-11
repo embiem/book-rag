@@ -91,26 +91,173 @@ When db is dirty, force db to a version reflecting it's real state: `migrate -da
 
 The current setup will run outstanding migrations at runtime on startup via `db/init.go`.
 
+## Evaluation Pipeline
+
+The project includes a evaluation system to measure and improve RAG
+performance using LLM-as-a-judge methodology.
+
+### Overview
+
+The evaluation pipeline consists of:
+
+1. **Synthetic Dataset Generation**: Automatically creates question-answer pairs
+   from book passages using a LLM
+2. **Quality Filtering**: Three critique agents evaluate each QA pair on:
+   - **Groundedness** (1-5): Can the question be answered from the given context?
+   - **Relevance** (1-5): Is the question useful to actual users?
+   - **Standalone** (1-5): Is the question understandable without additional context?
+3. **Answer Evaluation**: LLM judge compares generated answers against reference answers
+4. **Metrics**: Scoring including average correctness
+
+### Commands
+
+#### Generate Evaluation Dataset
+
+Create a synthetic QA dataset from ingested books:
+
+```bash
+# Generate from a specific book (recommended)
+go run cmd/gendata/main.go -samples 30 -book-id 19
+
+# Generate from all books
+go run cmd/gendata/main.go -samples 50
+
+# Custom output path
+go run cmd/gendata/main.go -samples 30 -book-id 19 -output testdata/my_dataset.json
+```
+
+**Parameters**:
+
+- `-samples`: Number of QA pairs to generate before filtering (default: 250)
+- `-book-id`: Specific book ID to use (0 = all books, default: 0)
+- `-output`: Output file path (default: `testdata/eval_dataset.json`)
+
+**Quality Filter**: Only QA pairs scoring ≥3 on all three critique dimensions are kept.
+
+#### Run Evaluation
+
+Evaluate the RAG system against a dataset:
+
+```bash
+# Run evaluation with defaults
+go run cmd/evaluate/main.go
+
+# Specify custom dataset and output
+go run cmd/evaluate/main.go \
+  -dataset testdata/eval_dataset.json \
+  -output testdata/results/experiment_v1.json \
+  -rag-url http://localhost:3000
+```
+
+**Parameters**:
+
+- `-dataset`: Path to evaluation dataset (default: `testdata/eval_dataset.json`)
+- `-output`: Results output path (default: `testdata/results/baseline.json`)
+- `-rag-url`: RAG server base URL (default: `http://localhost:3000`)
+
+**Requirements**: Server must be running (`go run main.go`) and `OPENAI_API_KEY` must be set.
+
+### Understanding Results
+
+The evaluation produces detailed metrics:
+
+```
+EVALUATION RESULTS
+============================================================
+
+Total Questions:     15
+Average Score:       4.33 / 5.0
+Median Score:        4.0
+F-Score (≥4):        0.867
+
+Score Distribution:
+  5:   7 (46.7%)    # Fully correct
+  4:   6 (40.0%)    # Mostly correct
+  3:   2 (13.3%)    # Partially correct
+  2:   0 (0.0%)     # Mostly incorrect
+  1:   0 (0.0%)     # Completely incorrect
+
+Accuracy by Threshold:
+  ≥5: 46.7%
+  ≥4: 86.7%    # Primary success metric (F-Score)
+  ≥3: 100.0%
+```
+
+**Key Metrics**:
+
+- **Average Score**: Mean correctness (1-5 scale)
+- **F-Score**: Percentage of answers scoring ≥4 (treat as "correct")
+- **Distribution**: Breakdown of all scores for detailed analysis
+
+### Baseline Results
+
+Current baseline (15 QA pairs from Romeo & Juliet):
+
+- **Average Score**: 4.33 / 5.0
+- **F-Score**: 0.867 (86.7% of answers scored ≥4)
+- **Perfect Scores**: 46.7% of answers scored 5/5
+
+### Iterating and Improving
+
+1. **Establish Baseline**: Generate dataset and run initial evaluation
+2. **Make Changes**: Modify chunking, retrieval count, prompts, etc.
+3. **Re-evaluate**: Run evaluation with same dataset to compare results
+4. **Compare**: Use the same dataset file to ensure fair comparison
+
+Example workflow:
+
+```bash
+# 1. Generate dataset once
+go run cmd/gendata/main.go -samples 30 -book-id 19
+
+# 2. Run baseline evaluation
+go run cmd/evaluate/main.go -output testdata/results/baseline.json
+
+# 3. Make improvements to the RAG pipeline
+#    (e.g., edit handler/generate.go, rag/chunking.go)
+
+# 4. Re-evaluate with same dataset
+go run cmd/evaluate/main.go -output testdata/results/improved_v1.json
+
+# 5. Compare results programmatically or manually
+```
+
+The baseline evaluation dataset is fairly minimal at this moment.
+For a production system, this dataset should be increased in size and
+draw from more than one book, ideally cover many different genres, authors and
+eras.
+
 ## Further Improvements
 
 **Architectural**:
 
-- ollama as a component in docker-compose with necessary embedding model
-  pre-installed. So we don't have to require manually installing it.
-- insert embeddings into DB as they are created to prevent large memory spikes
-  for larger books
+- Containerize Ollama in docker-compose with necessary embedding model
+  pre-installed to eliminate manual setup
+- Insert embeddings into DB as they are created to prevent large memory spikes
+  for larger books (batch streaming)
+- Add caching layer for frequently accessed embeddings and passages
 
-**RAG specific**:
+**RAG Pipeline**:
 
-- setup evaluation pipeline & metrics before improving the RAG pipeline, e.g.
-  using a LLM as a judge approach and a
-- improve the chunking mechanism to better fit the domain space of books
-  (chapters, prologue, table of contents etc)
-- extract entities from book and add as metadata on passages, allowing hybrid
-  search to increase precision of query results
-- include mechanism to "expand" a passage to read e.g. what comes before/after
-  it, by including references to previous/next passages
-- let LLM generate an optimized query based on the user's input (HyDE)
-- during generation, use LLM function calling to allow the model to query for
-  more context if necessary, with an additional similarity search or retrieving
-  the previous/next passage of a passage that is of interest
+- Improve the chunking mechanism to better fit the domain space of books:
+  - Detect and preserve chapter boundaries
+  - Handle prologues, table of contents separately
+  - Context-aware splitting that maintains narrative coherence
+- Extract entities from books and add as metadata on passages for hybrid search
+  to increase precision of query results
+- Implement passage "expansion" mechanism to include before/after context:
+  - Add references to previous/next passages in results
+  - Allow dynamic context window adjustment
+- Query optimization:
+  - Let LLM generate an optimized query based on user input (HyDE)
+  - Implement query rewriting for better retrieval
+- Enhanced generation:
+  - Use LLM function calling to allow the model to query for more context
+  - Support iterative retrieval during generation
+  - Add re-ranking step after initial retrieval
+
+**Evaluation System**:
+
+- Generate larger evaluation datasets for more robust metrics
+  - Cover many books from a wide range of genres and authors
+- Implement automated comparison tools for A/B testing different configurations

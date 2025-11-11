@@ -42,6 +42,75 @@ func (q *Queries) CreateBook(ctx context.Context, arg CreateBookParams) (RagBook
 	return i, err
 }
 
+const getAllBookPassages = `-- name: GetAllBookPassages :many
+SELECT
+    id,
+    book_id,
+    passage_text
+FROM rag.book_passage
+`
+
+type GetAllBookPassagesRow struct {
+	ID          int64
+	BookID      int64
+	PassageText string
+}
+
+func (q *Queries) GetAllBookPassages(ctx context.Context) ([]GetAllBookPassagesRow, error) {
+	rows, err := q.db.Query(ctx, getAllBookPassages)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllBookPassagesRow
+	for rows.Next() {
+		var i GetAllBookPassagesRow
+		if err := rows.Scan(&i.ID, &i.BookID, &i.PassageText); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getBookPassages = `-- name: GetBookPassages :many
+SELECT
+    id,
+    book_id,
+    passage_text
+FROM rag.book_passage
+WHERE book_id = $1
+`
+
+type GetBookPassagesRow struct {
+	ID          int64
+	BookID      int64
+	PassageText string
+}
+
+func (q *Queries) GetBookPassages(ctx context.Context, bookID int64) ([]GetBookPassagesRow, error) {
+	rows, err := q.db.Query(ctx, getBookPassages, bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBookPassagesRow
+	for rows.Next() {
+		var i GetBookPassagesRow
+		if err := rows.Scan(&i.ID, &i.BookID, &i.PassageText); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listBooks = `-- name: ListBooks :many
 SELECT
     id,

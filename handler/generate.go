@@ -66,6 +66,13 @@ func HandleGenerate(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Could not generate response"))
 	}
 
+	// Return JSON response with answer and metadata
+	jsonResponse := map[string]interface{}{
+		"answer":           response,
+		"retrieved_chunks": len(queryResult.Passages),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(response))
+	json.NewEncoder(w).Encode(jsonResponse)
 }

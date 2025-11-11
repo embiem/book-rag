@@ -28,4 +28,22 @@ ORDER BY embedding <=> $2
 LIMIT $3;
 
 -- name: BookExists :one
-SELECT EXISTS(SELECT 1 FROM rag.book WHERE id = $1);
+SELECT EXISTS(
+    SELECT 1 FROM rag.book
+    WHERE id = $1
+);
+
+-- name: GetBookPassages :many
+SELECT
+    id,
+    book_id,
+    passage_text
+FROM rag.book_passage
+WHERE book_id = $1;
+
+-- name: GetAllBookPassages :many
+SELECT
+    id,
+    book_id,
+    passage_text
+FROM rag.book_passage;
