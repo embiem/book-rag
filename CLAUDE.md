@@ -41,7 +41,7 @@ The project includes an evaluation pipeline for measuring RAG performance using 
 - **Dataset Generation** (`cmd/gendata`): Creates synthetic QA pairs from book passages
 - **Quality Filtering**: Three critique agents score groundedness, relevance, and standalone clarity
 - **Answer Judging** (`cmd/evaluate`): LLM compares generated vs reference answers (1-5 scale)
-- **Metrics**: Average score, F-score (≥4 threshold), distribution analysis
+- **Metrics**: Average score, pass rate (≥4 threshold), distribution analysis
 
 ### Commands
 
@@ -61,7 +61,7 @@ go run cmd/evaluate/main.go \
 ### Current Baseline
 
 - **Average Score**: 4.33 / 5.0
-- **F-Score**: 0.867 (86.7% scored ≥4)
+- **Pass Rate**: 0.867 (86.7% scored ≥4)
 - **Dataset**: 15 QA pairs from Romeo & Juliet
 
 ### Files

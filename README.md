@@ -3,6 +3,9 @@
 This is a HTTP server in Golang that offers REST endpoints for ingesting a book
 into a vector database and then querying it and doing RAG using a LLM on it.
 
+The evaluation pipeline was developed utilizing Claude Code.
+It's based on a common RAG evaluation concept of LLM-as-a-judge.
+
 ## Prerequisites
 
 - mise-en-place: <https://mise.jdx.dev/>
@@ -168,7 +171,7 @@ EVALUATION RESULTS
 Total Questions:     15
 Average Score:       4.33 / 5.0
 Median Score:        4.0
-F-Score (≥4):        0.867
+Pass Rate (≥4):      0.867
 
 Score Distribution:
   5:   7 (46.7%)    # Fully correct
@@ -179,14 +182,14 @@ Score Distribution:
 
 Accuracy by Threshold:
   ≥5: 46.7%
-  ≥4: 86.7%    # Primary success metric (F-Score)
+  ≥4: 86.7%    # Primary success metric (Pass Rate)
   ≥3: 100.0%
 ```
 
 **Key Metrics**:
 
 - **Average Score**: Mean correctness (1-5 scale)
-- **F-Score**: Percentage of answers scoring ≥4 (treat as "correct")
+- **Pass Rate**: Percentage of answers scoring ≥4 (treat as "correct")
 - **Distribution**: Breakdown of all scores for detailed analysis
 
 ### Baseline Results
@@ -194,7 +197,7 @@ Accuracy by Threshold:
 Current baseline (15 QA pairs from Romeo & Juliet):
 
 - **Average Score**: 4.33 / 5.0
-- **F-Score**: 0.867 (86.7% of answers scored ≥4)
+- **Pass Rate**: 0.867 (86.7% of answers scored ≥4)
 - **Perfect Scores**: 46.7% of answers scored 5/5
 
 ### Iterating and Improving

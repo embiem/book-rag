@@ -64,5 +64,5 @@ type EvalMetrics struct {
 	MedianScore         float64         `json:"median_score"`
 	ScoreDistribution   map[int]int     `json:"score_distribution"`    // Count of each score 1-5
 	AccuracyAtThreshold map[int]float64 `json:"accuracy_at_threshold"` // % scoring >= threshold
-	PassRateAtFour      float64         `json:"f_score"`               // Percentage scoring >= 4 (threshold for "correct")
+	PassRateAtFour      float64         `json:"pass_rate"`             // Percentage scoring >= 4 (threshold for "correct")
 }
