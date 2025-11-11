@@ -15,10 +15,12 @@ It's based on a common RAG evaluation concept of LLM-as-a-judge.
 
 1. activate mise in the project (pins a go version & loads env vars)
 2. `docker compose up -d` to run the necessary architecture (like db)
-3. install [ollama](https://ollama.com/download) & run `ollama pull embeddinggemma`
+3. install [ollama](https://ollama.com/download) (recommended: latest. minimum: v0.11.10)
+   & run `ollama pull embeddinggemma`
    to download the vector embeddings model used for generating vector embeddings
 4. ensure the `OPENAI_API_KEY` env var exists and has a valid OpenAI API Key for
    the LLM generation, for example using mise.local.toml
+5. run `air` for hot reloaded development or `go run main.go`
 
 Finally, use the following REST API endpoints to interact with the server.
 You can use test books from /books, or download more from [https://www.gutenberg.org/](https://www.gutenberg.org/).
@@ -46,6 +48,7 @@ You can use test books from /books, or download more from [https://www.gutenberg
 ```bash
 # Ingest a new book
 curl -X POST http://localhost:3000/books \
+  -F "name=Romeo and Juliet" \
   -F "file=@books/romeo_and_juliet.txt"
 
 # List all books
@@ -238,14 +241,13 @@ eras.
   pre-installed to eliminate manual setup
 - Insert embeddings into DB as they are created to prevent large memory spikes
   for larger books (batch streaming)
-- Add caching layer for frequently accessed embeddings and passages
 
 **RAG Pipeline**:
 
 - Improve the chunking mechanism to better fit the domain space of books:
   - Detect and preserve chapter boundaries
   - Handle prologues, table of contents separately
-  - Context-aware splitting that maintains narrative coherence
+- Include contextual/structural info in text passages (page, chapter, entities etc)
 - Extract entities from books and add as metadata on passages for hybrid search
   to increase precision of query results
 - Implement passage "expansion" mechanism to include before/after context:
