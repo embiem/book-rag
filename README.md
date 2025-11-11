@@ -36,6 +36,7 @@ You can use test books from /books, or download more from [https://www.gutenberg
   - Returns passages ranked by similarity with scores
 - `POST /books/{bookID}/rag` - Provide a prompt and receive a LLM generated
   answer enriched with relevant passages from the book
+  - Request body: `{"query": "What happens in the balcony scene?"}`
 
 #### Example curl commands
 
@@ -45,16 +46,16 @@ curl -X POST http://localhost:3000/books \
   -F "file=@books/romeo_and_juliet.txt"
 
 # List all books
-curl http://localhost:8080/books
+curl http://localhost:3000/books
 
 # Perform RAG a book (replace {bookID} with actual ID from previous commands)
 # Requires OPENAI_API_KEY env variable to be set
-curl -X POST http://localhost:8080/books/{bookID}/rag \
+curl -X POST http://localhost:3000/books/{bookID}/rag \
   -H "Content-Type: application/json" \
   -d '{"query": "What happens in the balcony scene?"}'
 
 # Query a book (replace {bookID} with actual ID from previous commands)
-curl -X POST http://localhost:8080/books/{bookID}/query \
+curl -X POST http://localhost:3000/books/{bookID}/query \
   -H "Content-Type: application/json" \
   -d '{"query": "What happens in the balcony scene?"}'
 ```

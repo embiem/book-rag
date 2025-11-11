@@ -107,8 +107,8 @@ func HandleQueryBook(w http.ResponseWriter, r *http.Request) {
 	bookID, err := EnsureBookExists(r)
 	if err != nil {
 		if bookErr, ok := err.(HttpError); ok {
-			w.WriteHeader(bookErr.status)
-			enc.Encode(ErrorResponse{Error: bookErr.msg})
+			w.WriteHeader(bookErr.Status)
+			enc.Encode(ErrorResponse{Error: bookErr.Msg})
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 			enc.Encode(ErrorResponse{Error: "Internal Server Error"})

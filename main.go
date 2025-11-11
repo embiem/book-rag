@@ -31,6 +31,8 @@ Available endpoints:
 - POST /books/{bookID}/query - Query for snippets from a specific book
   Body: {"query": "search text", "limit": 20}
   query (required), limit (optional, default: 20, max: 100)
+- POST /books/{bookID}/rag - Provide a prompt and receive a LLM generated answer enriched with relevant passages from the book
+  Body: {"query": "your question about the book"}
 `))
 	})
 

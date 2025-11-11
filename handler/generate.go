@@ -27,8 +27,8 @@ func HandleGenerate(w http.ResponseWriter, r *http.Request) {
 	bookID, err := EnsureBookExists(r)
 	if err != nil {
 		if bookErr, ok := err.(HttpError); ok {
-			w.WriteHeader(bookErr.status)
-			w.Write([]byte(bookErr.msg))
+			w.WriteHeader(bookErr.Status)
+			w.Write([]byte(bookErr.Msg))
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Internal Server Error"))
