@@ -67,27 +67,21 @@ func main() {
 		fmt.Printf("Failed Questions:    %d\n", run.Metrics.FailedQuestions)
 		fmt.Printf("Successful:          %d\n", run.Metrics.TotalQuestions-run.Metrics.FailedQuestions)
 	}
-	fmt.Printf("Average Score:       %.2f / 5.0\n", run.Metrics.AverageScore)
-	fmt.Printf("Median Score:        %.1f\n", run.Metrics.MedianScore)
-	fmt.Printf("Pass Rate (≥4):      %.3f\n", run.Metrics.PassRateAtFour)
-	fmt.Printf("\nScore Distribution:\n")
-	for score := 5; score >= 1; score-- {
-		count := run.Metrics.ScoreDistribution[score]
-		pct := float64(count) / float64(run.Metrics.TotalQuestions) * 100
-		fmt.Printf("  %d: %3d (%.1f%%)\n", score, count, pct)
-	}
-	fmt.Printf("\nAccuracy by Threshold:\n")
-	for threshold := 5; threshold >= 1; threshold-- {
-		pct := run.Metrics.AccuracyAtThreshold[threshold] * 100
-		fmt.Printf("  ≥%d: %.1f%%\n", threshold, pct)
-	}
+	fmt.Printf("\n")
+
+	// Display metrics for each dimension
+	displayDimensionMetrics("FAITHFULNESS (Groundedness)", run.Metrics.Faithfulness, run.Metrics.TotalQuestions-run.Metrics.FailedQuestions)
+	displayDimensionMetrics("ANSWER RELEVANCE", run.Metrics.AnswerRelevance, run.Metrics.TotalQuestions-run.Metrics.FailedQuestions)
+	displayDimensionMetrics("CORRECTNESS", run.Metrics.Correctness, run.Metrics.TotalQuestions-run.Metrics.FailedQuestions)
+	displayDimensionMetrics("CONTEXT RELEVANCE", run.Metrics.ContextRelevance, run.Metrics.TotalQuestions-run.Metrics.FailedQuestions)
+
 	fmt.Printf("\n%s\n\n", separator)
 
 	// Save results
 	fmt.Printf("Saving results to %s...\n", *outputFile)
 
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll("testdata/results", 0755); err != nil {
+	if err := os.MkdirAll("testdata/results", 0o755); err != nil {
 		log.Fatalf("Failed to create results directory: %v", err)
 	}
 
@@ -104,4 +98,32 @@ func main() {
 	}
 
 	fmt.Printf("\n✓ Evaluation complete! Results saved to %s\n", *outputFile)
+}
+
+// displayDimensionMetrics prints metrics for a single evaluation dimension
+func displayDimensionMetrics(name string, metrics eval.DimensionMetrics, totalSuccessful int) {
+	divider := strings.Repeat("-", 80)
+	fmt.Printf("%s\n", divider)
+	fmt.Printf("%s\n", name)
+	fmt.Printf("%s\n", divider)
+	fmt.Printf("Average Score:       %.2f / 5.0\n", metrics.AverageScore)
+	fmt.Printf("Median Score:        %.1f\n", metrics.MedianScore)
+	fmt.Printf("Pass Rate (≥4):      %.3f (%.1f%%)\n", metrics.PassRateAtFour, metrics.PassRateAtFour*100)
+
+	fmt.Printf("\nScore Distribution:\n")
+	for score := 5; score >= 1; score-- {
+		count := metrics.ScoreDistribution[score]
+		var pct float64
+		if totalSuccessful > 0 {
+			pct = float64(count) / float64(totalSuccessful) * 100
+		}
+		fmt.Printf("  %d: %3d (%.1f%%)\n", score, count, pct)
+	}
+
+	fmt.Printf("\nAccuracy by Threshold:\n")
+	for threshold := 5; threshold >= 1; threshold-- {
+		pct := metrics.AccuracyAtThreshold[threshold] * 100
+		fmt.Printf("  ≥%d: %.1f%%\n", threshold, pct)
+	}
+	fmt.Printf("\n")
 }

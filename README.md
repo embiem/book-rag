@@ -3,9 +3,6 @@
 This is a HTTP server in Golang that offers REST endpoints for ingesting a book
 into a vector database and then querying it and doing RAG using a LLM on it.
 
-The evaluation pipeline was developed utilizing Claude Code.
-It's based on a common RAG evaluation concept of LLM-as-a-judge.
-
 ## Prerequisites
 
 - mise-en-place: <https://mise.jdx.dev/>
@@ -119,7 +116,8 @@ The evaluation pipeline consists of:
 
 #### Generate Evaluation Dataset
 
-Create a synthetic QA dataset from ingested books:
+Create a synthetic QA dataset from ingested books (requires to have ingested
+a book first via the POST /books endpoint):
 
 ```bash
 # Generate from a specific book (recommended)
@@ -134,7 +132,7 @@ go run cmd/gendata/main.go -samples 30 -book-id 19 -output testdata/my_dataset.j
 
 **Parameters**:
 
-- `-samples`: Number of QA pairs to generate before filtering (default: 250)
+- `-samples`: Number of QA pairs to generate before filtering (default: 50)
 - `-book-id`: Specific book ID to use (0 = all books, default: 0)
 - `-output`: Output file path (default: `testdata/eval_dataset.json`)
 

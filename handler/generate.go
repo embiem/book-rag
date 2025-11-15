@@ -68,8 +68,9 @@ func HandleGenerate(w http.ResponseWriter, r *http.Request) {
 
 	// Return JSON response with answer and metadata
 	jsonResponse := map[string]interface{}{
-		"answer":           response,
-		"retrieved_chunks": len(queryResult.Passages),
+		"answer":            response,
+		"retrieved_chunks":  len(queryResult.Passages),
+		"retrieved_context": PrettifyPassages(queryResult.Passages),
 	}
 
 	w.Header().Set("Content-Type", "application/json")

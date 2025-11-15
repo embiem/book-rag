@@ -16,7 +16,7 @@ import (
 func main() {
 	// Parse command-line flags
 	bookID := flag.Int64("book-id", 0, "Book ID to generate QA pairs from (0 = use all books)")
-	samples := flag.Int("samples", 250, "Number of QA pairs to generate (before filtering)")
+	samples := flag.Int("samples", 50, "Number of QA pairs to generate (before filtering)")
 	output := flag.String("output", "testdata/eval_dataset.json", "Output file path")
 	flag.Parse()
 
@@ -50,6 +50,7 @@ func main() {
 			log.Fatalf("Failed to fetch passages for book %d: %v", *bookID, err)
 		}
 		fmt.Printf("Found %d passages from book %d\n", len(passages), *bookID)
+
 		chunks = make([]eval.ChunkWithBook, len(passages))
 		for i, p := range passages {
 			chunks[i] = eval.ChunkWithBook{
@@ -63,6 +64,7 @@ func main() {
 			log.Fatalf("Failed to fetch passages: %v", err)
 		}
 		fmt.Printf("Found %d passages from all books\n", len(passages))
+
 		chunks = make([]eval.ChunkWithBook, len(passages))
 		for i, p := range passages {
 			chunks[i] = eval.ChunkWithBook{
@@ -91,7 +93,7 @@ func main() {
 	fmt.Printf("\nSaving dataset to %s...\n", *output)
 
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll("testdata", 0755); err != nil {
+	if err := os.MkdirAll("testdata", 0o755); err != nil {
 		log.Fatalf("Failed to create testdata directory: %v", err)
 	}
 
